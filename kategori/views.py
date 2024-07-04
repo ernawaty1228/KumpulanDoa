@@ -1,3 +1,53 @@
-from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from .models import Kategori
+from .serializers import KategoriSerializer
 
-# Create your views here.
+class KategoriList(APIView):
+    
+
+    def get(self, request):
+        kategori = Kategori.objects.all()
+        serializer = KategoriSerializer(kategori, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = KategoriSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class KategoriDetail(APIView):
+    
+
+    def get_object(self, pk):
+        try:
+            return Kategori.objects.get(pk=pk)
+        except Kategori.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        kategori = self.get_object(pk)
+        if not kategori:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = KategoriSerializer(kategori)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        kategori = self.get_object(pk)
+        if not kategori:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = KategoriSerializer(kategori, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        kategori = self.get_object(pk)
+        if not kategori:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        kategori.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
